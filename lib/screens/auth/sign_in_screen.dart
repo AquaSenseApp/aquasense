@@ -117,7 +117,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               height: 20,
                               decoration: BoxDecoration(
                                 color: _rememberMe
-                                    ? AppColors.teal.withOpacity(0.15)
+                                    ? AppColors.teal.withValues(alpha: .15)
                                     : AppColors.white,
                                 border: Border.all(
                                   color: _rememberMe

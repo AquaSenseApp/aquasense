@@ -104,7 +104,7 @@ class _SuccessIcon extends StatelessWidget {
       width: 100,
       height: 100,
       decoration: BoxDecoration(
-        color: AppColors.mint.withOpacity(0.3),
+        color: AppColors.mint.withValues(alpha: .3),
         shape: BoxShape.circle,
       ),
       child: Center(

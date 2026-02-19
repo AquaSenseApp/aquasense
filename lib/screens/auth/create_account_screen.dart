@@ -169,7 +169,7 @@ class _TermsCheckbox extends StatelessWidget {
             width: 20,
             height: 20,
             decoration: BoxDecoration(
-              color: value ? AppColors.teal.withOpacity(0.15) : AppColors.white,
+              color: value ? AppColors.teal.withValues(alpha: 0.15) : AppColors.white,
               border: Border.all(
                 color: value ? AppColors.teal : AppColors.borderColor,
                 width: 1.5,

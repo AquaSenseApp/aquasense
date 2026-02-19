@@ -178,7 +178,7 @@ class OnboardingIllustration extends StatelessWidget {
                 width: 50,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: lineColor.withOpacity(0.4),
+                  color: lineColor.withValues(alpha: .4),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),

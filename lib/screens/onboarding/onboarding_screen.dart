@@ -25,7 +25,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _next(OnboardingProvider provider) {
-    if (provider.currentPage < onboardingPages.length - 1) {
+    if (provider.canGoNext()) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,

@@ -10,10 +10,12 @@ class AppBackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap ?? () => Navigator.of(context).maybePop(),
-      child: Container(
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Container(
         width: 36,
         height: 36,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.pinkLight,
           shape: BoxShape.circle,
         ),
@@ -23,6 +25,7 @@ class AppBackButton extends StatelessWidget {
           size: 22,
         ),
       ),
+    )
     );
   }
 }

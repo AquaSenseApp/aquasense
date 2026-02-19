@@ -4,12 +4,14 @@ class OnboardingProvider extends ChangeNotifier {
   int _currentPage = 0;
   final int totalPages;
 
-  OnboardingProvider({this.totalPages = 3});
+  OnboardingProvider({required this.totalPages});
 
   int get currentPage => _currentPage;
 
   void setPage(int page) {
-    _currentPage = page; // Update this if you add/remove onboarding pages
+   if (page >= 0 && page < totalPages) {
+     _currentPage = page;
+   }
     notifyListeners();
   }
 
