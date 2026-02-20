@@ -1,111 +1,89 @@
+
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
+/// Asset paths — defined once here so renaming images is a single-line change.
+class _Assets {
+  static const circuitBoard  = 'assets/images/1.png';
+  static const colorfulWires = 'assets/images/3.png';
+  static const pipeline      = 'assets/images/2.png';
+}
+
 /// The decorative illustration shown on onboarding pages 1–3.
 ///
-/// Visually matches the design: three teal/mint pill-shaped sensor cards
-/// with circular photo thumbnails, floating over coloured blob shapes.
-/// All sizes and positions are derived from [illustrationHeight] so it
-/// scales cleanly on different screen widths.
+/// Matches the design exactly:
+///   • Three teal/mint pill cards with circular photo thumbnails
+///   • A standalone circular thumbnail (colourful wires) floating top-right
+///   • Two blob shapes in the background corners
+///   • Scatter dots in brand accent colours
+///
+/// All positions are proportional to [MediaQuery] width so the layout
+/// holds on different screen sizes.
 class OnboardingIllustration extends StatelessWidget {
-  /// Total height of the illustration area.
-  final double illustrationHeight;
-
-  const OnboardingIllustration({
-    super.key,
-    this.illustrationHeight = 300,
-  });
+  const OnboardingIllustration({super.key});
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
+    const h = 320.0;
 
     return SizedBox(
       width: double.infinity,
-      height: illustrationHeight,
+      height: h,
       child: Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
-          // ── Background blobs ──────────────────────────────────────────
+          // Background Blobs
+          Positioned(left: -30, bottom: 40, child: _Blob(size: 100, color: const Color(0xFFB2F5EA))),
+          Positioned(right: -20, bottom: 0, child: _Blob(size: 80, color: const Color(0xFFFCE7F3))),
 
-          /// Mint blob — bottom-left corner
+          // Scatter Dots
+          const Positioned(top: 20, left: 80, child: _Dot(size: 10, color: Color(0xFF7F1D1D))),
+          const Positioned(top: 60, right: 120, child: _Dot(size: 8, color: Color(0xFFF9A8D4))),
+          const Positioned(bottom: 100, left: 20, child: _Dot(size: 12, color: Color(0xFF10B981))),
+
+          // --- Card 1 (Top Center) ---
           Positioned(
-            left: -24,
-            bottom: 10,
-            child: _Blob(size: 90, color: const Color(0xFFB2F5EA)),
+            top: 20,
+            child: const _SensorCard(),
           ),
 
-          /// Pink blob — bottom-right corner
+          // --- Card 2 (Middle Left + Circuit Photo) ---
           Positioned(
-            right: -16,
-            bottom: -10,
-            child: _Blob(size: 75, color: const Color(0xFFFCE7F3)),
-          ),
-
-          // ── Decorative scatter dots ───────────────────────────────────
-
-          /// Dark-maroon dot — top-centre-left
-          Positioned(
-            top: 18,
-            left: w * 0.28,
-            child: const _Dot(size: 9, color: Color(0xFF7F1D1D)),
-          ),
-
-          /// Small pink dot — upper-middle
-          Positioned(
-            top: 58,
-            left: w * 0.44,
-            child: _Dot(size: 7, color: AppColors.pinkLight),
-          ),
-
-          /// Green dot — left edge mid
-          Positioned(
-            top: illustrationHeight * 0.52,
-            left: 10,
-            child: const _Dot(size: 11, color: Color(0xFF10B981)),
-          ),
-
-          /// Dark-maroon dot — right mid-low
-          Positioned(
-            top: illustrationHeight * 0.55,
-            right: w * 0.12,
-            child: const _Dot(size: 10, color: Color(0xFF7F1D1D)),
-          ),
-
-          // ── Sensor cards ─────────────────────────────────────────────
-
-          /// Card 1 — top-centre, no photo thumbnail
-          Positioned(
-            top: 10,
-            left: w * 0.30,
-            child: const _SensorCard(showThumbnail: false),
-          ),
-
-          /// Card 2 — middle-left, circuit-board photo thumbnail
-          Positioned(
-            top: illustrationHeight * 0.28,
-            left: w * 0.04,
-            child: const _SensorCard(
-              showThumbnail: true,
-              thumbnailIcon: Icons.memory,
+            top: 90,
+            left: w * 0.05,
+            child: Row(
+              children: [
+                const _CircularPhoto(assetPath: _Assets.circuitBoard, size: 60),
+                Transform.translate(
+                  offset: const Offset(-15, 0), // Slight overlap
+                  child: const _SensorCard(),
+                ),
+              ],
             ),
           ),
 
-          /// Standalone circular photo — middle-right (camera / settings icon)
+          // --- Standalone Photo (Top Right) ---
           Positioned(
-            top: illustrationHeight * 0.22,
-            right: w * 0.08,
-            child: const _CircularThumbnail(size: 58, icon: Icons.settings),
+            top: 60,
+            right: w * 0.1,
+            child: const _CircularPhoto(assetPath: _Assets.colorfulWires, size: 70),
           ),
 
-          /// Card 3 — lower-centre, factory / pipeline photo thumbnail
+          // --- Card 3 (Bottom Center + Large Pipeline Photo) ---
           Positioned(
-            top: illustrationHeight * 0.50,
-            left: w * 0.18,
-            child: const _SensorCard(
-              showThumbnail: true,
-              thumbnailIcon: Icons.factory,
-              thumbnailSize: 64,
+            bottom: 20,
+            right: w * 0.08,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const _CircularPhoto(assetPath: _Assets.pipeline, size: 100),
+                Transform.translate(
+                  offset: const Offset(-20, -10),
+                  child: const _SensorCard(),
+                ),
+              ],
             ),
           ),
         ],
@@ -113,12 +91,11 @@ class OnboardingIllustration extends StatelessWidget {
     );
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Private sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// A solid-coloured circular blob used as background decoration.
+/// Solid circle used as a background blob.
 class _Blob extends StatelessWidget {
   final double size;
   final Color color;
@@ -126,16 +103,14 @@ class _Blob extends StatelessWidget {
   const _Blob({required this.size, required this.color});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
 }
 
-/// A small filled circle used as a scatter dot in the illustration.
+/// Tiny filled circle used as a scatter dot.
 class _Dot extends StatelessWidget {
   final double size;
   final Color color;
@@ -143,24 +118,20 @@ class _Dot extends StatelessWidget {
   const _Dot({required this.size, required this.color});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      );
 }
 
-/// A circular image thumbnail — represents a sensor / equipment photo.
-class _CircularThumbnail extends StatelessWidget {
+/// A circular clipped photo from a local asset path.
+/// Shows a grey placeholder while loading.
+class _CircularPhoto extends StatelessWidget {
+  final String assetPath;
   final double size;
-  final IconData icon;
 
-  const _CircularThumbnail({
-    required this.size,
-    required this.icon,
-  });
+  const _CircularPhoto({required this.assetPath, required this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -168,33 +139,39 @@ class _CircularThumbnail extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        // Light grey fill simulates a photo placeholder
-        color: const Color(0xFFD1D5DB),
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.white, width: 2.5),
       ),
-      child: Icon(icon, color: const Color(0xFF6B7280), size: size * 0.4),
+      child: ClipOval(
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
+          // Grey placeholder shown before the asset is decoded
+          errorBuilder: (_, __, ___) => Container(
+            color: const Color(0xFFD1D5DB),
+            child: const Icon(Icons.image, color: Color(0xFF9CA3AF)),
+          ),
+        ),
+      ),
     );
   }
 }
 
-/// A teal/mint pill-shaped card that resembles a sensor-reading result row.
+/// A teal/mint pill-shaped sensor-reading card.
 ///
-/// Optionally shows a [_CircularThumbnail] on the left side.
-/// Always shows a teal check-circle and two placeholder line bars on the right.
+/// When [assetPath] is provided a [_CircularPhoto] is shown on the left.
+/// Always includes a teal check-circle and two coloured placeholder bars.
 class _SensorCard extends StatelessWidget {
-  /// Whether to show a circular photo thumbnail on the left.
-  final bool showThumbnail;
-
-  /// Icon used inside the thumbnail (ignored when [showThumbnail] is false).
-  final IconData thumbnailIcon;
+  /// Optional asset image shown as the left thumbnail.
+  /// Pass null (default) for a card with no image.
+  final String? assetPath;
 
   /// Diameter of the thumbnail circle.
   final double thumbnailSize;
 
   const _SensorCard({
-    this.showThumbnail = false,
-    this.thumbnailIcon = Icons.memory,
+    super.key,
+    this.assetPath,
     this.thumbnailSize = 44,
   });
 
@@ -203,20 +180,20 @@ class _SensorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        // Matches the mint/teal pill colour in the designs
+        // Mint pill — matches the design
         color: const Color(0xFFB2F5EA),
         borderRadius: BorderRadius.circular(32),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Optional left thumbnail ──────────────────────────────────
-          if (showThumbnail) ...[
-            _CircularThumbnail(size: thumbnailSize, icon: thumbnailIcon),
+          // ── Optional photo thumbnail ─────────────────────────────────
+          if (assetPath != null) ...[
+            _CircularPhoto(assetPath: assetPath!, size: thumbnailSize),
             const SizedBox(width: 8),
           ],
 
-          // ── Teal check indicator ─────────────────────────────────────
+          // ── Teal check-circle ────────────────────────────────────────
           Container(
             width: 22,
             height: 22,
@@ -228,14 +205,14 @@ class _SensorCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
 
-          // ── Placeholder data bars ────────────────────────────────────
+          // ── Data-bar placeholders ────────────────────────────────────
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Primary bar — teal/dark
+              // Primary bar — teal
               Container(
-                width: 70,
+                width: 68,
                 height: 6,
                 decoration: BoxDecoration(
                   color: AppColors.teal,
@@ -243,9 +220,9 @@ class _SensorCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 5),
-              // Secondary bar — maroon, shorter
+              // Secondary bar — maroon accent
               Container(
-                width: 48,
+                width: 46,
                 height: 5,
                 decoration: BoxDecoration(
                   color: const Color(0xFF7F1D1D),
