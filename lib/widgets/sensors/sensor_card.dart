@@ -36,14 +36,16 @@ class SensorCard extends StatelessWidget {
               const Spacer(),
               RiskBadge(level: sensor.riskLevel),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onEdit,
-                child: const Icon(
-                  Icons.edit_outlined,
-                  size:  18,
+            IconButton(
+                icon: const Icon(
+                  Icons.close,
                   color: AppColors.textGrey,
+                  size: 22,
                 ),
-              ),
+                tooltip: 'Close',
+                onPressed: () => Navigator.of(context).pop(),
+              )
+
             ],
           ),
           const SizedBox(height: 6),
@@ -93,7 +95,7 @@ class SensorCard extends StatelessWidget {
   }
 
   /// Human-friendly relative timestamp, e.g. "Update 5 min ago".
-  String _formatTimestamp(DateTime t) {
+  static String _formatTimestamp(DateTime t) {
     final diff = DateTime.now().difference(t);
     if (diff.inSeconds < 60) return 'Update just now';
     if (diff.inMinutes < 60) return 'Update ${diff.inMinutes} min ago';

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 
+
 /// Asset paths — defined once here so renaming images is a single-line change.
 class _Assets {
   static const circuitBoard  = 'assets/images/1.png';
@@ -35,7 +36,7 @@ class OnboardingIllustration extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           // Background Blobs
-          Positioned(left: -30, bottom: 40, child: _Blob(size: 100, color: const Color(0xFFB2F5EA))),
+          Positioned(left: -30, bottom: 40, child: _Blob(size: 100, color: AppColors.mint)),
           Positioned(right: -20, bottom: 0, child: _Blob(size: 80, color: const Color(0xFFFCE7F3))),
 
           // Scatter Dots
@@ -181,7 +182,7 @@ class _SensorCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         // Mint pill — matches the design
-        color: const Color(0xFFB2F5EA),
+        color: AppColors.mint,
         borderRadius: BorderRadius.circular(32),
       ),
       child: Row(

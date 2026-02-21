@@ -50,7 +50,7 @@ class MockSensorRepository implements SensorRepository {
       sensitivityLevel: RiskSensitivityLevel.medium,
     ),
     SensorModel(
-      id: 'AQ-TUR-145',
+      id: 'AQ-TUR-203',
       name: 'Turbidity Monitor A',
       location: 'Mowe, Ogun',
       parameter: ParameterType.turbidity,

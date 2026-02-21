@@ -21,11 +21,9 @@ class RiskBadge extends StatelessWidget {
       ),
       child: Text(
         level.label,
-        style: TextStyle(
-          fontSize:   12,
-          fontWeight: FontWeight.w500,
-          color:      _fgColor,
-        ),
+        style: 
+          Theme.of(context).textTheme.labelSmall?.copyWith(color: _fgColor),
+      
       ),
     );
   }

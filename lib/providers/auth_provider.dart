@@ -35,19 +35,21 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
-
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (email.isEmpty || password.isEmpty) {
+     if (email.isEmpty || password.isEmpty) {
       _status = AuthStatus.error;
       _errorMessage = 'Please fill in all fields';
       notifyListeners();
       return false;
     }
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+   
+
+    // Simulate API call
+    await Future.delayed(const Duration(seconds: 2));
+
+    
 
     _user = UserModel(email: email, isEmailVerified: true);
     _status = AuthStatus.authenticated;

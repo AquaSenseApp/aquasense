@@ -1,3 +1,4 @@
+import 'package:aquasense/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -9,14 +10,18 @@ import '../../widgets/sensors/sensor_card.dart';
 /// Home tab — welcome greeting, AI banner, search, recent sensors.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+ 
 
   @override
   Widget build(BuildContext context) {
+      final userName = context.watch<AuthProvider>().user?.name ?? 'there';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Consumer<SensorProvider>(
           builder: (context, provider, _) {
+            // 2. Fix: Call recentSensors ONCE per build/refresh
+            final sensors = provider.recentSensors(count: 3);
             return RefreshIndicator(
               color: AppColors.teal,
               onRefresh: provider.loadSensors,
@@ -33,12 +38,8 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                                Text(
-                                'Welcome Meggie 👋',
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textDark,
-                                ),
+                                'Welcome $userName 👋',
+                                style: Theme.of(context).textTheme.labelLarge
                               ),
                               // Notification bell with red badge
                               Stack(
@@ -115,17 +116,14 @@ class HomeScreen extends StatelessWidget {
                   else
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      sliver: SliverList(
+                     sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
-                          (context, i) {
-                            final sensors = provider.recentSensors(count: 3);
-                            if (i >= sensors.length) return null;
-                            return SensorCard(sensor: sensors[i]);
-                          },
-                          childCount: provider.recentSensors(count: 3).length,
+                          (context, i) => SensorCard(sensor: sensors[i]),
+                          childCount: sensors.length,
+                        ),
                         ),
                       ),
-                    ),
+                    
                 ],
               ),
             );

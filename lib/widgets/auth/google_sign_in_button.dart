@@ -1,3 +1,4 @@
+import 'package:aquasense/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -28,7 +29,7 @@ class GoogleSignInButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(double.infinity, 56),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        side: const BorderSide(color: Color(0xFFE5E5E5)), // AppColors.borderColor
+        side: const BorderSide(color: AppColors.borderColor), // AppColors.borderColor
       ),
       icon: SvgPicture.string(_googleLogoSvg, height: 24),
       label: Text(

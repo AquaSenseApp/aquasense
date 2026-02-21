@@ -45,7 +45,7 @@ class _MainShellState extends State<MainShell> {
       // Floating AI assistant button (centre FAB)
       floatingActionButton: FloatingActionButton(
         onPressed: () => showAddSensorSheet(context),
-        backgroundColor: const Color(0xFF7C2D8E), // purple matching design
+        backgroundColor: AppColors.aiFab, // purple matching design
         shape: const CircleBorder(),
         child: const Icon(Icons.auto_awesome, color: AppColors.white, size: 22),
       ),

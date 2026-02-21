@@ -11,11 +11,7 @@ class FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textDark,
-      ),
+      style:Theme.of(context).textTheme.labelLarge
     );
   }
 }

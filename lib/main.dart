@@ -18,10 +18,12 @@ void main() {
 }
 
 class AquaSenseApp extends StatelessWidget {
+  
   const AquaSenseApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),

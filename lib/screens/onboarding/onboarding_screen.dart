@@ -24,10 +24,19 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
+  late final OnboardingProvider _onboardingProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    // Created once here so rebuilds of this widget never reset the page state.
+    _onboardingProvider = OnboardingProvider(totalPages: onboardingPages.length);
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _onboardingProvider.dispose();
     super.dispose();
   }
 
@@ -39,8 +48,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   /// Advance to the next page, or navigate to Create Account on the last page.
-  void _next(OnboardingProvider provider) {
-    if (provider.canGoNext()) {
+  void _next() {
+    if (_onboardingProvider.canGoNext()) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOut,
@@ -55,11 +64,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => OnboardingProvider(totalPages: onboardingPages.length),
+    return ChangeNotifierProvider.value(
+      value: _onboardingProvider,
       child: Consumer<OnboardingProvider>(
         builder: (context, provider, _) {
-
           return Scaffold(
             backgroundColor: AppColors.white,
             // Swipe to change page; last page shows the logo landing
@@ -73,10 +81,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ? _LogoLandingPage(onGetStarted: _handleSkip)
                     : _IllustrationPage(
                         page: page,
-                        provider: provider,
                         pageController: _pageController,
                         onSkip: _handleSkip,
-                        onNext: () => _next(provider),
+                        onNext: _next,
                       );
               },
             ),
@@ -94,14 +101,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 /// Pages 1–3: illustration in the upper half, text + nav in the lower half.
 class _IllustrationPage extends StatelessWidget {
   final OnboardingPage page;
-  final OnboardingProvider provider;
   final PageController pageController;
   final VoidCallback onSkip;
   final VoidCallback onNext;
 
   const _IllustrationPage({
     required this.page,
-    required this.provider,
     required this.pageController,
     required this.onSkip,
     required this.onNext,
@@ -185,7 +190,7 @@ class _LogoLandingPage extends StatelessWidget {
             top: MediaQuery.of(context).size.height * 0.3,
             child: _LandingBlob(
               size: 90,
-              color: const Color(0xFFB2F5EA),
+              color:  AppColors.mint,
             ),
           ),
           Positioned(
@@ -363,6 +368,7 @@ class _SmallDot extends StatelessWidget {
 
 /// "Already have an account? Sign in" row used on the logo landing page.
 class _SignInLink extends StatelessWidget {
+  const _SignInLink();
   @override
   Widget build(BuildContext context) {
     return Row(

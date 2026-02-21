@@ -162,6 +162,7 @@ class _SheetFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SensorProvider>();
     final isLastStep = provider.wizardStep == 3;
 
     return Padding(
@@ -246,9 +247,8 @@ class _SuccessSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('Successful',
-              style: TextStyle(
-                  style: Theme.of(context).textTheme.headlineSmall)),
+          Text('Successful',
+              style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
           Text(
             'Sensor $sensorId successfully added and now being monitored.',
@@ -431,7 +431,14 @@ class _Step4Review extends StatelessWidget {
         const SizedBox(height: 16),
         _ReviewRow(label: 'Sensor ID',  value: form.sensorId),
         _ReviewRow(label: 'Parameter',  value: form.parameterType?.label ?? '—'),
-        _ReviewRow(label: 'Location',   value: '${form.specificLocation}, ${form.site}'),
+        _ReviewRow(
+          label: 'Location',
+          value: [
+            form.specificLocation,
+            form.site,
+          ].where((s) => s.isNotEmpty).join(', '),
+        ),
+
         _ReviewRow(label: 'Thresholds', value: form.sensitivityLevel?.label ?? '—'),
         // AI Advisory checkbox (read-only display)
         Container(
