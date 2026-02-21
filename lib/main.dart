@@ -3,13 +3,15 @@ import 'package:provider/provider.dart';
 import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/sensor_provider.dart';
+import 'repositories/sensor_repository.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/create_account_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/email_verified_screen.dart';
-import 'screens/home/home_screen.dart';
+import 'screens/home/main_shell.dart';
 
 void main() {
   runApp(const AquaSenseApp());
@@ -23,6 +25,12 @@ class AquaSenseApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        // SensorProvider depends on SensorRepository (injected here).
+        // Swap MockSensorRepository for a real implementation without
+        // changing any screen or provider code.
+        ChangeNotifierProvider(
+          create: (_) => SensorProvider(MockSensorRepository()),
+        ),
       ],
       child: MaterialApp(
         title: 'AquaSense',
@@ -36,7 +44,7 @@ class AquaSenseApp extends StatelessWidget {
           AppRoutes.signIn:         (_) => const SignInScreen(),
           AppRoutes.forgotPassword: (_) => const ForgotPasswordScreen(),
           AppRoutes.emailVerified:  (_) => const EmailVerifiedScreen(),
-          AppRoutes.home:           (_) => const HomeScreen(),
+          AppRoutes.home:           (_) => const MainShell(),
         },
       ),
     );
