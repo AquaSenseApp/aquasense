@@ -1,24 +1,24 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/auth/auth_footer_link.dart';
+import '../../widgets/auth/auth_header.dart';
+import '../../widgets/auth/field_label.dart';
+import '../../widgets/auth/google_sign_in_button.dart';
 import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_logo.dart';
 import '../../widgets/common/app_text_field.dart';
 
 /// Create Account screen.
 ///
 /// Layout (top → bottom):
-///   • Teal back-arrow  (top-left, teal circle)
-///   • AquaSense logo   (centred)
-///   • Title + subtitle (centred)
-///   • Email / Password fields
-///   • Terms checkbox
+///   • [AuthHeader]           — back button, logo, title, subtitle
+///   • Email / Password fields with [FieldLabel]s
+///   • [_TermsCheckbox]       — "I agree to terms of service and privacy policy"
 ///   • "Create Account" primary button
-///   • "Sign up with Google" outlined button
-///   • "Already have an account? Sign in" link
+///   • [GoogleSignInButton]   — "Sign up with Google"
+///   • [AuthFooterLink]       — "Already have an account? Sign in"
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
 
@@ -31,7 +31,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final _passwordController = TextEditingController();
   bool _agreedToTerms = false;
 
-  /// Primary CTA is enabled only when both fields are filled and terms accepted.
+  /// Primary CTA enabled only when fields filled + terms accepted.
   bool get _canSubmit =>
       _emailController.text.isNotEmpty &&
       _passwordController.text.isNotEmpty &&
@@ -80,42 +80,26 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 children: [
                   const SizedBox(height: 16),
 
-                  // ── Teal back button (top-left) ──────────────────────
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: _TealBackButton(
-                      onTap: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── AquaSense logo (centred) ─────────────────────────
-                  const Center(child: AppLogo(size: 100)),
-                  const SizedBox(height: 24),
-
-                  // ── Title + subtitle (centred) ───────────────────────
-                  const Text(
-                    'Create Account',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Sign up to get started on the platform',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textGrey,
-                    ),
+                  // ── Logo + title block ───────────────────────────────
+                  AuthHeader(
+                    title: 'Create Account',
+                    subtitle: 'Sign up to get started on the platform',
+                    onBack: () {
+                           if (Navigator.of(context).canPop()) {
+                            Navigator.of(context).pop();
+                          } else {
+                            // If someone arrived here directly (e.g., deep link),
+                            // send them to onboarding instead of a black screen.
+                            Navigator.of(
+                              context,
+                            ).pushReplacementNamed(AppRoutes.onboarding);
+                          }
+                        },
                   ),
                   const SizedBox(height: 28),
 
-                  // ── Email field ──────────────────────────────────────
-                  const _FieldLabel('Email'),
+                  // ── Email ────────────────────────────────────────────
+                  const FieldLabel('Email'),
                   const SizedBox(height: 8),
                   AppTextField(
                     hint: 'Enter your email',
@@ -125,8 +109,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // ── Password field ───────────────────────────────────
-                  const _FieldLabel('Password'),
+                  // ── Password ─────────────────────────────────────────
+                  const FieldLabel('Password'),
                   const SizedBox(height: 8),
                   AppTextField(
                     hint: '••••••••',
@@ -153,11 +137,23 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   const SizedBox(height: 14),
 
                   // ── Google sign-up ───────────────────────────────────
-                  _GoogleButton(onTap: _signUpWithGoogle),
+                  GoogleSignInButton(
+                    label: 'Sign up with Google',
+                    onTap: _signUpWithGoogle,
+                  ),
                   const SizedBox(height: 24),
 
                   // ── Sign-in link ─────────────────────────────────────
-                  _SignInLink(),
+                  AuthFooterLink(
+                    prefixText: 'Already have an account?  ',
+                    linkText: 'Sign in',
+                   onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
+                      AppRoutes.signIn,
+                      ModalRoute.withName(
+                        AppRoutes.onboarding,
+                      ), // Keep onboarding, remove signup
+                    ),   
+                  ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -173,53 +169,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 // Private sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Teal circular back button — matches the design's mint/teal arrow circle.
-class _TealBackButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _TealBackButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: const BoxDecoration(
-          // Mint/teal tint matching the design's back-button circle
-          color: Color(0xFFB2F5EA),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.arrow_back,
-          color: AppColors.teal,
-          size: 20,
-        ),
-      ),
-    );
-  }
-}
-
-/// Simple bold field label above a text field.
-class _FieldLabel extends StatelessWidget {
-  final String text;
-  const _FieldLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textDark,
-      ),
-    );
-  }
-}
-
-/// Checkbox row: "I agree to the terms of service and privacy policy"
+/// "I agree to the terms of service and privacy policy" checkbox row.
+/// Only used on Create Account so kept private to this file.
 class _TermsCheckbox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
@@ -233,7 +184,7 @@ class _TermsCheckbox extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Custom checkbox square
+          // Custom teal checkbox
           Container(
             width: 18,
             height: 18,
@@ -253,7 +204,7 @@ class _TermsCheckbox extends StatelessWidget {
           ),
           const SizedBox(width: 10),
 
-          // Rich text with tappable terms links
+          // "I agree to the terms of service and privacy policy"
           Text.rich(
             TextSpan(
               text: 'I agree to the ',
@@ -279,146 +230,6 @@ class _TermsCheckbox extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Outlined "Sign up with Google" button.
-/// Uses the official Google brand colours for the four-colour 'G' logo.
-class _GoogleButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _GoogleButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderColor, width: 1.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // ── Google 'G' logo (four-colour) ──────────────────────────
-            _GoogleGLogo(size: 22),
-            const SizedBox(width: 12),
-            const Text(
-              'Sign up with Google',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Draws the official four-colour Google 'G' using a [CustomPainter].
-/// No image asset required — purely vector.
-class _GoogleGLogo extends StatelessWidget {
-  final double size;
-  const _GoogleGLogo({required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(size, size),
-      painter: _GoogleGPainter(),
-    );
-  }
-}
-
-class _GoogleGPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width  / 2;
-    final cy = size.height / 2;
-    final r  = size.width  / 2;
-
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    // ── Red (top-left arc) ───────────────────────────────────────────────
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      _deg(-210), _deg(120), true, paint,
-    );
-
-    // ── Blue (top-right + right arc) ────────────────────────────────────
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      _deg(-90), _deg(95), true, paint,
-    );
-
-    // ── Yellow (bottom-left arc) ─────────────────────────────────────────
-    paint.color = const Color(0xFFFBBC05);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      _deg(150), _deg(60), true, paint,
-    );
-
-    // ── Green (bottom-right arc) ─────────────────────────────────────────
-    paint.color = const Color(0xFF34A853);
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      _deg(5), _deg(145), true, paint,
-    );
-
-    // ── White centre circle (cuts out middle) ────────────────────────────
-    paint.color = AppColors.white;
-    canvas.drawCircle(Offset(cx, cy), r * 0.60, paint);
-
-    // ── Blue horizontal bar (the crossbar of the G) ──────────────────────
-    paint.color = const Color(0xFF4285F4);
-    final barTop    = cy - r * 0.13;
-    final barBottom = cy + r * 0.13;
-    canvas.drawRect(
-      Rect.fromLTRB(cx, barTop, cx + r, barBottom),
-      paint,
-    );
-  }
-
-  /// Converts degrees to radians for [canvas.drawArc].
-  double _deg(double degrees) => degrees * 3.14159265 / 180;
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-/// "Already have an account? Sign in" footer link.
-class _SignInLink extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          'Already have an account?  ',
-          style: TextStyle(color: AppColors.textGrey, fontSize: 14),
-        ),
-        GestureDetector(
-          onTap: () =>
-              Navigator.of(context).pushReplacementNamed(AppRoutes.signIn),
-          child: const Text(
-            'Sign in',
-            style: TextStyle(
-              color: AppColors.teal,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

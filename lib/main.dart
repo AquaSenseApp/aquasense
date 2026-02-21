@@ -7,6 +7,7 @@ import 'screens/splash/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/create_account_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/email_verified_screen.dart';
 import 'screens/home/home_screen.dart';
 
@@ -29,12 +30,13 @@ class AquaSenseApp extends StatelessWidget {
         theme: AppTheme.theme,
         initialRoute: AppRoutes.splash,
         routes: {
-          AppRoutes.splash: (_) => const SplashScreen(),
-          AppRoutes.onboarding: (_) => const OnboardingScreen(),
-          AppRoutes.createAccount: (_) => const CreateAccountScreen(),
-          AppRoutes.signIn: (_) => const SignInScreen(),
-          AppRoutes.emailVerified: (_) => const EmailVerifiedScreen(),
-          AppRoutes.home: (_) => const HomeScreen(),
+          AppRoutes.splash:         (_) => const SplashScreen(),
+          AppRoutes.onboarding:     (_) => const OnboardingScreen(),
+          AppRoutes.createAccount:  (_) => const CreateAccountScreen(),
+          AppRoutes.signIn:         (_) => const SignInScreen(),
+          AppRoutes.forgotPassword: (_) => const ForgotPasswordScreen(),
+          AppRoutes.emailVerified:  (_) => const EmailVerifiedScreen(),
+          AppRoutes.home:           (_) => const HomeScreen(),
         },
       ),
     );

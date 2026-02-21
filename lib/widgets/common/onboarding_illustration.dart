@@ -147,7 +147,7 @@ class _CircularPhoto extends StatelessWidget {
           assetPath,
           fit: BoxFit.cover,
           // Grey placeholder shown before the asset is decoded
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (_, _, _) => Container(
             color: const Color(0xFFD1D5DB),
             child: const Icon(Icons.image, color: Color(0xFF9CA3AF)),
           ),

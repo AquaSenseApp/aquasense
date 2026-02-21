@@ -35,7 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   /// Jump straight to Create Account, bypassing remaining pages.
   void _handleSkip() {
-    Navigator.of(context).pushReplacementNamed(AppRoutes.createAccount);
+    Navigator.of(context).pushNamed(AppRoutes.createAccount);
   }
 
   /// Advance to the next page, or navigate to Create Account on the last page.
@@ -374,7 +374,7 @@ class _SignInLink extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () =>
-              Navigator.of(context).pushReplacementNamed(AppRoutes.signIn),
+              Navigator.of(context).pushNamed(AppRoutes.signIn),
           child: const Text(
             'Sign in',
             style: TextStyle(
