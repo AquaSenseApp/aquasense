@@ -1,8 +1,8 @@
 import '../models/sensor_model.dart';
 
 /// Abstract interface for sensor data operations.
-/// Screens depend on this interface — swap the implementation
-/// (mock ↔ real API) without touching any UI code.
+/// Screens depend on this contract — swap [MockSensorRepository] for a
+/// real HTTP/Firestore implementation without touching any UI code.
 abstract class SensorRepository {
   Future<List<SensorModel>> getSensors();
   Future<SensorModel?> getSensorById(String id);
@@ -10,78 +10,112 @@ abstract class SensorRepository {
   Future<void> deleteSensor(String id);
 }
 
-/// In-memory sensor repository that pre-seeds realistic sample data.
-/// Replace with an HTTP/Firestore implementation using the same interface.
+// ─────────────────────────────────────────────────────────────────────────────
+// Mock implementation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// In-memory repository pre-seeded with realistic sample sensors.
 class MockSensorRepository implements SensorRepository {
-  /// Internal mutable list — simulates a local database.
   final List<SensorModel> _sensors = [
     SensorModel(
-      id: 'AQ-PH-202',
-      name: 'pH Sensor Alpha',
-      location: 'Amuwo Odofin, Lagos',
+      id:        'AQ-PH-203',
+      name:      'pH Sensor Alpha',
+      location:  'Amuwo Odofin, Lagos',
       parameter: ParameterType.pH,
       riskLevel: RiskLevel.high,
+      complianceStatus: ComplianceStatus.fail,
+      safeRange:       '6.5 - 8.5',
+      alertThreshold:  AlertThreshold.criticalLevel,
       latestReading: SensorReading(
-        value: 7.2,
+        value:     7.2,
         parameter: ParameterType.pH,
-        trend: TrendDirection.up,
+        trend:     TrendDirection.up,
         timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
       ),
-      aiInsight: 'The pH level is above the acceptable dischar...',
-      aiAdvisoryEnabled: true,
-      dataSource: DataSourceType.iot,
-      sensitivityLevel: RiskSensitivityLevel.high,
+      advisory: const AiAdvisory(
+        headline:          'The pH level is above the acceptable discharge range',
+        impactExplanation: 'Effects on compliance, ecosystem or process safety.',
+        recommendedActions: [
+          'Inspect neutralization system',
+          'Verify dosing levels',
+          'Monitor readings closely',
+        ],
+        impactNotes:
+            'Continued discharge at this level may lead to regulatory violations.',
+      ),
     ),
     SensorModel(
-      id: 'AQ-PH-202',
-      name: 'pH Sensor Beta',
-      location: 'Amuwo Odofin, Lagos',
+      id:        'AQ-PH-202',
+      name:      'pH Sensor Beta',
+      location:  'Amuwo Odofin, Lagos',
       parameter: ParameterType.pH,
       riskLevel: RiskLevel.medium,
+      complianceStatus: ComplianceStatus.pass,
+      safeRange:       '6.5 - 8.5',
+      alertThreshold:  AlertThreshold.warningLevel,
       latestReading: SensorReading(
-        value: 5.2,
+        value:     5.2,
         parameter: ParameterType.pH,
-        trend: TrendDirection.up,
+        trend:     TrendDirection.up,
         timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
       ),
-      aiInsight: 'Acidity exceeds safe discharge limits.',
-      aiAdvisoryEnabled: true,
-      dataSource: DataSourceType.iot,
-      sensitivityLevel: RiskSensitivityLevel.medium,
+      advisory: const AiAdvisory(
+        headline:          'Acidity exceeds safe discharge limits',
+        impactExplanation: 'Low pH may corrode infrastructure and harm aquatic life.',
+        recommendedActions: [
+          'Add alkaline buffer to treatment tank',
+          'Check inlet flow composition',
+        ],
+        impactNotes:
+            'Monitor for 30 min; escalate if pH drops below 5.0.',
+      ),
     ),
     SensorModel(
-      id: 'AQ-TUR-203',
-      name: 'Turbidity Monitor A',
-      location: 'Mowe, Ogun',
+      id:        'AQ-TUR-145',
+      name:      'Turbidity Monitor A',
+      location:  'Mowe, Ogun',
       parameter: ParameterType.turbidity,
       riskLevel: RiskLevel.low,
+      complianceStatus: ComplianceStatus.pass,
+      safeRange:       '0 - 5',
+      alertThreshold:  AlertThreshold.warningLevel,
       latestReading: SensorReading(
-        value: 2.3,
+        value:     2.3,
         parameter: ParameterType.turbidity,
-        trend: TrendDirection.down,
+        trend:     TrendDirection.down,
         timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
       ),
-      aiInsight: 'pH is below safe range. Acidic levels detected.',
-      aiAdvisoryEnabled: true,
-      dataSource: DataSourceType.mqtt,
-      sensitivityLevel: RiskSensitivityLevel.low,
+      advisory: const AiAdvisory(
+        headline:          'Turbidity within acceptable range.',
+        impactExplanation: 'High turbidity reduces UV disinfection effectiveness.',
+        recommendedActions: [
+          'Run coagulation cycle',
+          'Inspect filter media',
+        ],
+        impactNotes: 'Values trending down — continue monitoring.',
+      ),
     ),
     SensorModel(
-      id: 'AQ-TUR-145',
-      name: 'Turbidity Monitor B',
-      location: 'Berger, Lagos',
+      id:        'AQ-TUR-146',
+      name:      'Turbidity Monitor B',
+      location:  'Berger, Lagos',
       parameter: ParameterType.turbidity,
       riskLevel: RiskLevel.low,
+      complianceStatus: ComplianceStatus.pass,
+      safeRange:       '0 - 5',
       latestReading: SensorReading(
-        value: 2.3,
+        value:     2.3,
         parameter: ParameterType.turbidity,
-        trend: TrendDirection.down,
+        trend:     TrendDirection.down,
         timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
       ),
-      aiInsight: 'Acidity exceeds safe discharge limits.',
+      advisory: const AiAdvisory(
+        headline:          'Acidity exceeds safe discharge limits.',
+        impactExplanation: 'Sensor operating within acceptable range.',
+        recommendedActions: ['Maintain current treatment protocol'],
+        impactNotes: 'No immediate action required.',
+      ),
       aiAdvisoryEnabled: false,
-      dataSource: DataSourceType.modbus,
-      sensitivityLevel: RiskSensitivityLevel.low,
     ),
   ];
 
@@ -105,18 +139,26 @@ class MockSensorRepository implements SensorRepository {
   Future<SensorModel> addSensor(AddSensorForm form) async {
     await Future.delayed(const Duration(seconds: 1));
     final sensor = SensorModel(
-      id:             form.sensorId,
-      name:           form.sensorName,
-      location:       '${form.specificLocation}, ${form.site}',
-      parameter:      form.parameterType ?? ParameterType.other,
-      riskLevel:      RiskLevel.low,
-      latestReading:  SensorReading(
+      id:               form.sensorId,
+      name:             form.sensorName,
+      location:         '${form.specificLocation}, ${form.site}',
+      parameter:        form.parameterType ?? ParameterType.other,
+      riskLevel:        RiskLevel.low,
+      complianceStatus: ComplianceStatus.pass,
+      safeRange:        form.safeRange,
+      alertThreshold:   form.alertThreshold,
+      latestReading: SensorReading(
         value:     0.0,
         parameter: form.parameterType ?? ParameterType.other,
         trend:     TrendDirection.stable,
         timestamp: DateTime.now(),
       ),
-      aiInsight:         'Awaiting first reading.',
+      advisory: const AiAdvisory(
+        headline:           'Awaiting first reading.',
+        impactExplanation:  'No data yet.',
+        recommendedActions: [],
+        impactNotes:        '',
+      ),
       aiAdvisoryEnabled: form.aiAdvisoryEnabled,
       gpsCoordinates:    form.gpsCoordinates.isNotEmpty ? form.gpsCoordinates : null,
       dataSource:        form.dataSourceType ?? DataSourceType.iot,

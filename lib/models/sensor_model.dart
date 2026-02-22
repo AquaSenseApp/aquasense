@@ -1,11 +1,9 @@
-
 /// Risk level of a sensor reading — drives badge colour and AI alerts.
 enum RiskLevel {
   low,
   medium,
   high;
 
-  /// Human-readable label shown in the badge.
   String get label {
     switch (this) {
       case RiskLevel.low:    return 'low';
@@ -26,24 +24,23 @@ enum ParameterType {
 
   String get label {
     switch (this) {
-      case ParameterType.pH:               return 'pH';
-      case ParameterType.turbidity:        return 'Turbidity';
-      case ParameterType.dissolvedOxygen:  return 'Dissolved Oxygen';
-      case ParameterType.temperature:      return 'Temperature';
-      case ParameterType.conductivity:     return 'Conductivity';
-      case ParameterType.other:            return 'Other';
+      case ParameterType.pH:              return 'pH';
+      case ParameterType.turbidity:       return 'Turbidity';
+      case ParameterType.dissolvedOxygen: return 'Dissolved Oxygen';
+      case ParameterType.temperature:     return 'Temperature';
+      case ParameterType.conductivity:    return 'Conductivity';
+      case ParameterType.other:           return 'Other';
     }
   }
 
-  /// Unit abbreviation shown next to the reading value.
   String get unit {
     switch (this) {
-      case ParameterType.pH:               return 'pH';
-      case ParameterType.turbidity:        return 'NTU';
-      case ParameterType.dissolvedOxygen:  return 'mg/L';
-      case ParameterType.temperature:      return '°C';
-      case ParameterType.conductivity:     return 'µS/cm';
-      case ParameterType.other:            return '';
+      case ParameterType.pH:              return 'pH';
+      case ParameterType.turbidity:       return 'NTU';
+      case ParameterType.dissolvedOxygen: return 'mg/L';
+      case ParameterType.temperature:     return '°C';
+      case ParameterType.conductivity:    return 'µS/cm';
+      case ParameterType.other:           return '';
     }
   }
 }
@@ -51,7 +48,7 @@ enum ParameterType {
 /// Trend direction of the latest sensor reading.
 enum TrendDirection { up, down, stable }
 
-/// Source type for how the sensor transmits data.
+/// How the sensor transmits data to the platform.
 enum DataSourceType {
   iot,
   manual,
@@ -68,7 +65,7 @@ enum DataSourceType {
   }
 }
 
-/// Risk sensitivity setting for the AI advisory engine.
+/// AI advisory sensitivity — controls how aggressively alerts fire.
 enum RiskSensitivityLevel {
   low,
   medium,
@@ -83,11 +80,37 @@ enum RiskSensitivityLevel {
   }
 }
 
+/// Alert threshold category for Configuration Settings (step 3).
+enum AlertThreshold {
+  warningLevel,
+  criticalLevel;
+
+  String get label {
+    switch (this) {
+      case AlertThreshold.warningLevel:  return 'Warning Level';
+      case AlertThreshold.criticalLevel: return 'Critical Level';
+    }
+  }
+}
+
+/// WHO compliance result for a sensor reading.
+enum ComplianceStatus {
+  pass,
+  fail;
+
+  String get label {
+    switch (this) {
+      case ComplianceStatus.pass: return 'Pass';
+      case ComplianceStatus.fail: return 'Fail';
+    }
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Sensor data models
+// Value objects
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Immutable value object representing a single sensor reading.
+/// A single sensor reading snapshot.
 class SensorReading {
   final double value;
   final ParameterType parameter;
@@ -101,24 +124,47 @@ class SensorReading {
     required this.timestamp,
   });
 
-  /// Formatted reading string, e.g. "5.2 pH" or "2.3 NTU".
+  /// Formatted string shown in the card, e.g. "5.2 pH".
   String get displayValue => '$value ${parameter.unit}';
 }
 
-/// Full sensor entity stored in the repository.
+/// Structured AI advisory returned for a sensor reading.
+class AiAdvisory {
+  /// Short headline shown in the sensor card.
+  final String headline;
+  /// Fuller explanation of the impact category.
+  final String impactExplanation;
+  /// Bulleted list of concrete actions the operator should take.
+  final List<String> recommendedActions;
+  /// Regulatory / environmental impact notes.
+  final String impactNotes;
+
+  const AiAdvisory({
+    required this.headline,
+    required this.impactExplanation,
+    required this.recommendedActions,
+    required this.impactNotes,
+  });
+}
+
+/// Full sensor entity stored and managed by the repository.
 class SensorModel {
-  final String id;            // e.g. "AQ-PH-202"
+  final String id;
   final String name;
-  final String location;      // e.g. "Amuwo Odofin, Lagos"
+  final String location;
   final ParameterType parameter;
   final RiskLevel riskLevel;
   final SensorReading latestReading;
-  final String aiInsight;     // Short AI-generated advisory text
+  final ComplianceStatus complianceStatus;
+  final AiAdvisory advisory;
   final bool aiAdvisoryEnabled;
   final String? gpsCoordinates;
   final DataSourceType dataSource;
   final RiskSensitivityLevel sensitivityLevel;
-
+  /// Safe operating range, e.g. "6.5 - 6.8"
+  final String safeRange;
+  final AlertThreshold? alertThreshold;
+ 
   const SensorModel({
     required this.id,
     required this.name,
@@ -126,12 +172,16 @@ class SensorModel {
     required this.parameter,
     required this.riskLevel,
     required this.latestReading,
-    required this.aiInsight,
-    this.aiAdvisoryEnabled = true,
+    required this.advisory,
+    this.complianceStatus    = ComplianceStatus.pass,
+    this.aiAdvisoryEnabled   = true,
     this.gpsCoordinates,
-    this.dataSource = DataSourceType.iot,
-    this.sensitivityLevel = RiskSensitivityLevel.medium,
+    this.dataSource          = DataSourceType.iot,
+    this.sensitivityLevel    = RiskSensitivityLevel.medium,
+    this.safeRange           = '',
+    this.alertThreshold,
   });
+
 
   SensorModel copyWith({
     String? id,
@@ -140,55 +190,73 @@ class SensorModel {
     ParameterType? parameter,
     RiskLevel? riskLevel,
     SensorReading? latestReading,
-    String? aiInsight,
+    AiAdvisory? advisory,
+    ComplianceStatus? complianceStatus,
     bool? aiAdvisoryEnabled,
     String? gpsCoordinates,
     DataSourceType? dataSource,
     RiskSensitivityLevel? sensitivityLevel,
+    String? safeRange,
+    Nullable<AlertThreshold>? alertThreshold,
+    bool clearAlertThreshold = false,
   }) {
     return SensorModel(
-      id:                 id               ?? this.id,
-      name:               name             ?? this.name,
-      location:           location         ?? this.location,
-      parameter:          parameter        ?? this.parameter,
-      riskLevel:          riskLevel        ?? this.riskLevel,
-      latestReading:      latestReading    ?? this.latestReading,
-      aiInsight:          aiInsight        ?? this.aiInsight,
-      aiAdvisoryEnabled:  aiAdvisoryEnabled ?? this.aiAdvisoryEnabled,
-      gpsCoordinates:     gpsCoordinates   ?? this.gpsCoordinates,
-      dataSource:         dataSource       ?? this.dataSource,
-      sensitivityLevel:   sensitivityLevel ?? this.sensitivityLevel,
+      id:                id               ?? this.id,
+      name:              name             ?? this.name,
+      location:          location         ?? this.location,
+      parameter:         parameter        ?? this.parameter,
+      riskLevel:         riskLevel        ?? this.riskLevel,
+      latestReading:     latestReading    ?? this.latestReading,
+      advisory:          advisory         ?? this.advisory,
+      complianceStatus:  complianceStatus ?? this.complianceStatus,
+      aiAdvisoryEnabled: aiAdvisoryEnabled ?? this.aiAdvisoryEnabled,
+      gpsCoordinates:    gpsCoordinates   ?? this.gpsCoordinates,
+      dataSource:        dataSource       ?? this.dataSource,
+      sensitivityLevel:  sensitivityLevel ?? this.sensitivityLevel,
+      safeRange:         safeRange        ?? this.safeRange,
+      alertThreshold:    clearAlertThreshold ? null : (alertThreshold?.value ?? this.alertThreshold),
     );
   }
 }
 
-/// Transient form data collected during the Add Sensor wizard.
-/// Mutable — fields are set as the user progresses through each step.
+class Nullable<T> {
+   final T? value;
+   const Nullable(this.value);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wizard form — mutable, lives in SensorProvider during the add-sensor flow
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Transient form data built up across the 5-step Add Sensor wizard.
 class AddSensorForm {
   // Step 1 — Basic Info
   ParameterType? parameterType;
-  String sensorId        = '';
-  String sensorName      = '';
+  String sensorId   = '';
+  String sensorName = '';
 
   // Step 2 — Location & Source
-  String site            = '';
-  String specificLocation = '';
-  String gpsCoordinates  = '';
+  String site              = '';
+  String specificLocation  = '';
+  String gpsCoordinates    = '';
   DataSourceType? dataSourceType;
 
-  // Step 3 — AI Preferences
-  bool aiAdvisoryEnabled      = false;
+  // Step 3 — Configuration Settings
+  String safeRange         = '';
+  AlertThreshold? alertThreshold;
+
+  // Step 4 — AI Preferences
+  bool aiAdvisoryEnabled         = false;
   RiskSensitivityLevel? sensitivityLevel;
 
   AddSensorForm();
 
-  /// True when the minimum required fields for step 1 are filled.
   bool get step1Valid =>
-      parameterType != null &&
-      sensorId.isNotEmpty &&
-      sensorName.isNotEmpty;
+      parameterType != null && sensorId.isNotEmpty && sensorName.isNotEmpty;
 
-  /// True when the minimum required fields for step 2 are filled.
   bool get step2Valid =>
       site.isNotEmpty && specificLocation.isNotEmpty;
+
+  /// Config settings are optional — always valid.
+  bool get step3Valid => true;
 }

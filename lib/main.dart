@@ -1,3 +1,5 @@
+import 'package:aquasense/screens/sensors/ai_advisory_screen.dart';
+import 'package:aquasense/screens/sensors/sensor_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_routes.dart';
@@ -47,6 +49,8 @@ class AquaSenseApp extends StatelessWidget {
           AppRoutes.forgotPassword: (_) => const ForgotPasswordScreen(),
           AppRoutes.emailVerified:  (_) => const EmailVerifiedScreen(),
           AppRoutes.home:           (_) => const MainShell(),
+          AppRoutes.sensorDetail:   (_) => const SensorDetailScreen(),
+          AppRoutes.aiAdvisory:     (_) => const AiAdvisoryScreen(),
         },
       ),
     );

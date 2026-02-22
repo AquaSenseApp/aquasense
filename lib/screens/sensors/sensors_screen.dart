@@ -1,3 +1,4 @@
+import 'package:aquasense/core/constants/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -82,8 +83,14 @@ class SensorsScreen extends StatelessWidget {
                                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                                 itemCount: provider.filteredSensors.length,
                                 itemBuilder: (context, i) {
-                                  return SensorCard(
-                                    sensor: provider.filteredSensors[i]);
+                                return SensorCard(
+                                sensor: provider.filteredSensors[i],
+                                onTap: () => Navigator.of(context).pushNamed(
+                                  AppRoutes.sensorDetail,
+                                  arguments: provider.filteredSensors[i],
+                                ),
+                              );
+
                                 },
                               ),
                             ),

@@ -1,4 +1,7 @@
+
+
 class AppRoutes {
+  AppRoutes._(); // non-instantiable
   static const splash = '/';
   static const onboarding = '/onboarding';
   static const createAccount = '/create-account';
@@ -6,4 +9,6 @@ class AppRoutes {
   static const emailVerified = '/email-verified';
   static const forgotPassword = '/forgot-password';
   static const home = '/home';
+  static const sensorDetail   = '/sensor-detail';
+  static const aiAdvisory     = '/ai-advisory';
 }
