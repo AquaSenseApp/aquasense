@@ -12,14 +12,12 @@ import '../../widgets/common/app_text_field.dart';
 
 /// Sign In screen.
 ///
-/// Layout (top → bottom):
-///   • [AuthHeader]          — back button, logo, title, subtitle
-///   • Email / Password fields with labels
-///   • Remember me + Forgot Password row
-///   • "Login" primary button
-///   • [GoogleSignInButton]  — "Sign in with Google"
-///   • [AuthFooterLink]      — "Don't have an account? Create One"
-///   • Inline error message (if auth fails)
+/// Wires the "Remember me" checkbox to [AuthProvider.signIn] so the flag
+/// is written to SharedPreferences and honoured on the next cold start.
+/// After successful credential validation the provider transitions to
+/// [AuthStatus.pendingVerification] and this screen pushes [AppRoutes.emailVerification].
+/// If a verified session already exists for this email the provider skips OTP
+/// and transitions straight to [AuthStatus.authenticated].
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
@@ -32,7 +30,6 @@ class _SignInScreenState extends State<SignInScreen> {
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
 
-  /// Login button is enabled only when both fields have text.
   bool get _canSubmit =>
       _emailController.text.isNotEmpty &&
       _passwordController.text.isNotEmpty;
@@ -48,21 +45,27 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _submit(AuthProvider auth) async {
     if (!_canSubmit) return;
+
     final success = await auth.signIn(
-      email:    _emailController.text.trim(),
-      password: _passwordController.text,
+      email:      _emailController.text.trim(),
+      password:   _passwordController.text,
+      rememberMe: _rememberMe,
     );
-    if (success && mounted) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.emailVerified);
+
+    if (!success || !mounted) return;
+
+    if (auth.isPendingVerification) {
+      // First time (or expired session) — OTP required
+      Navigator.of(context).pushNamed(AppRoutes.emailVerification);
+    } else if (auth.isAuthenticated) {
+      // Existing verified session — go straight home
+      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
     }
   }
 
-  /// Navigates to the Forgot Password screen.
-  void _goToForgotPassword() {
-    Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
-  }
+  void _goToForgotPassword() =>
+      Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
 
-  /// Placeholder — wire up google_sign_in package when ready.
   void _signInWithGoogle() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Google sign-in coming soon')),
@@ -73,6 +76,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         return Scaffold(
@@ -85,51 +90,50 @@ class _SignInScreenState extends State<SignInScreen> {
                 children: [
                   const SizedBox(height: 16),
 
-                  // ── Logo + title block ───────────────────────────────
+                  // ── Logo + title ─────────────────────────────────────
                   AuthHeader(
-                    title: 'Welcome back',
+                    title:    'Welcome back',
                     subtitle: 'Log in to get started on the platform',
-                    onBack: () => Navigator.of(context).pop(),
+                    onBack:   () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(height: 28),
 
-                  // ── Email ────────────────────────────────────────────
+                  // ── Email ─────────────────────────────────────────────
                   const FieldLabel('Email'),
                   const SizedBox(height: 8),
                   AppTextField(
-                    hint: 'Enter your email',
-                    controller: _emailController,
+                    hint:         'Enter your email',
+                    controller:   _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    onChanged: (_) => setState(() {}),
+                    onChanged:    (_) => setState(() {}),
                   ),
                   const SizedBox(height: 18),
 
-                  // ── Password ─────────────────────────────────────────
+                  // ── Password ──────────────────────────────────────────
                   const FieldLabel('Password'),
                   const SizedBox(height: 8),
                   AppTextField(
-                    hint: '••••••••',
+                    hint:       '••••••••',
                     controller: _passwordController,
                     isPassword: true,
-                    onChanged: (_) => setState(() {}),
+                    onChanged:  (_) => setState(() {}),
                   ),
                   const SizedBox(height: 14),
 
-                  // ── Remember me + Forgot Password ────────────────────
+                  // ── Remember me + Forgot Password ─────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _RememberMeCheckbox(
-                        value: _rememberMe,
+                        value:     _rememberMe,
                         onChanged: (v) => setState(() => _rememberMe = v),
                       ),
                       GestureDetector(
                         onTap: _goToForgotPassword,
-                        child: const Text(
+                        child: Text(
                           'Forgot Password?',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.teal,
+                          style: tt.bodySmall?.copyWith(
+                            color:      AppColors.teal,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -138,37 +142,37 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Login CTA ────────────────────────────────────────
+                  // ── Login CTA ─────────────────────────────────────────
                   AppButton(
-                    label: 'Login',
-                    enabled: _canSubmit,
+                    label:     'Login',
+                    enabled:   _canSubmit,
                     isLoading: auth.status == AuthStatus.loading,
                     onPressed: () => _submit(auth),
                   ),
                   const SizedBox(height: 14),
 
-                  // ── Google sign-in ───────────────────────────────────
+                  // ── Google sign-in ─────────────────────────────────────
                   GoogleSignInButton(
                     label: 'Sign in with Google',
                     onTap: _signInWithGoogle,
                   ),
                   const SizedBox(height: 24),
 
-                  // ── Create account link ──────────────────────────────
+                  // ── Create account link ────────────────────────────────
                   AuthFooterLink(
                     prefixText: "Don't have an account?  ",
-                    linkText: 'Create One',
+                    linkText:   'Create One',
                     onTap: () => Navigator.of(context)
                         .pushReplacementNamed(AppRoutes.createAccount),
                   ),
 
-                  // ── Inline error ─────────────────────────────────────
+                  // ── Error message ─────────────────────────────────────
                   if (auth.errorMessage != null) ...[
                     const SizedBox(height: 16),
                     Text(
                       auth.errorMessage!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.riskHighFg, fontSize: 13),
+                      style: tt.bodySmall?.copyWith(color: AppColors.riskHighFg),
                     ),
                   ],
                   const SizedBox(height: 24),
@@ -186,7 +190,9 @@ class _SignInScreenState extends State<SignInScreen> {
 // Private sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// "Remember me" checkbox row — local to SignInScreen only.
+/// "Remember me" checkbox row — local to SignInScreen.
+/// Uses [tt.bodySmall] via [Theme.of(context)] (non-const) so there's no
+/// broken-const-context compile error.
 class _RememberMeCheckbox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
@@ -195,13 +201,14 @@ class _RememberMeCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return GestureDetector(
       onTap: () => onChanged(!value),
       child: Row(
         children: [
           Container(
-            width: 18,
-            height: 18,
+            width: 18, height: 18,
             decoration: BoxDecoration(
               color: value
                   ? AppColors.teal.withValues(alpha: 0.12)
@@ -217,10 +224,7 @@ class _RememberMeCheckbox extends StatelessWidget {
                 : null,
           ),
           const SizedBox(width: 8),
-          const Text(
-            'Remember me',
-            style: TextStyle(fontSize: 13, color: AppColors.textGrey),
-          ),
+          Text('Remember me', style: tt.bodySmall),
         ],
       ),
     );

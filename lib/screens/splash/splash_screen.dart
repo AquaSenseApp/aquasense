@@ -1,7 +1,15 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/auth_provider.dart';
 
+/// Splash screen shown for ~2s on cold start.
+///
+/// During the animation [AuthProvider.restoreSession] runs.
+/// • If a verified session is found in SharedPreferences → go to [AppRoutes.home]
+/// • Otherwise → go to [AppRoutes.onboarding] (first run) or [AppRoutes.signIn]
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -11,32 +19,41 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnim;
-  late Animation<double> _scaleAnim;
+  late final AnimationController _controller;
+  late final Animation<double>   _fadeAnim;
+  late final Animation<double>   _scaleAnim;
 
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      vsync:    this,
+      duration: const Duration(milliseconds: 900),
     );
-    
     _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _scaleAnim = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
     );
-
     _controller.forward();
-    _navigateAfterDelay();
+
+    _init();
   }
 
-  Future<void> _navigateAfterDelay() async {
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
-    }
+  /// Restore session while the splash animation plays, then navigate.
+  Future<void> _init() async {
+    // Run session check and minimum display duration in parallel
+    final results = await Future.wait([
+      context.read<AuthProvider>().restoreSession(),
+      Future.delayed(const Duration(milliseconds: 2000)),
+    ]);
+
+    if (!mounted) return;
+
+    final hasSession = results[0] as bool;
+    Navigator.of(context).pushReplacementNamed(
+      hasSession ? AppRoutes.home : AppRoutes.onboarding,
+    );
   }
 
   @override
@@ -47,7 +64,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppColors.teal,
       body: Center(
@@ -58,54 +74,27 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // The White Circle Logo
+                // Logo circle
                 Container(
-                  width: 110,
-                  height: 110,
+                  width: 90, height: 90,
                   decoration: const BoxDecoration(
-                    color:AppColors.white,
+                    color: AppColors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
-                    child: SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: Stack(
-                        children: const [
-                          // Small Drop (Top Left)
-                          Positioned(
-                            top: 8,
-                            left: 4,
-                            child: Icon(
-                              Icons.water_drop_outlined,
-                              color: AppColors.teal,
-                              size: 24,
-                            ),
-                          ),
-                          // Large Drop (Bottom Right)
-                          Positioned(
-                            bottom: 2,
-                            right: 2,
-                            child: Icon(
-                              Icons.water_drop_outlined,
-                              color: AppColors.teal,
-                              size: 44,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: const Icon(
+                    Icons.water_drop_outlined,
+                    color: AppColors.teal,
+                    size:  40,
                   ),
                 ),
-                const SizedBox(height: 24),
-                // The "AquaSense" Text
+                const SizedBox(height: 20),
                 const Text(
                   'AquaSense',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w500, // Medium weight for that clean look
-                    letterSpacing: -0.2, // Tighter letter spacing to match the UI
+                    color:       AppColors.white,
+                    fontSize:    28,
+                    fontWeight:  FontWeight.w600,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],

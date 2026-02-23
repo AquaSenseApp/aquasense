@@ -53,7 +53,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       password: _passwordController.text,
     );
     if (success && mounted) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.emailVerified);
+      Navigator.of(context).pushNamed(AppRoutes.emailVerification);
     }
   }
 
