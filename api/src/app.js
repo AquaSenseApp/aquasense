@@ -54,11 +54,12 @@ async function startServer() {
     await sequelize.sync({ alter: true });
     console.log('✅ All database tables synchronized successfully.');
 
-    // CHANGE 3000 TO 5000 HERE
-    const PORT = 5000; 
-    app.listen(PORT, () => {
-      console.log(`🚀 AquaSense API is running on http://localhost:${PORT}`);
-    });
+    //
+  const PORT = process.env.PORT || 5000; 
+app.listen(PORT, () => {
+  console.log(`🚀 AquaSense API is running on port ${PORT}`);
+});
+
   } catch (error) {
     console.error('❌ Failed to start server:', error);
   }
